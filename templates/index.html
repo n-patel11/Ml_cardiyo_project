@@ -1,0 +1,305 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Heart Condition Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #000; color: #fff; margin: 0; padding: 0; }
+        .container { display: flex; flex-direction: row; padding: 50px; align-items: center; justify-content: center; }
+        .left { width: 50%; padding-right: 50px; }
+        .right { width: 50%; text-align: center; }
+        img { width: 100%; border-radius: 20px; }
+        h1 { font-size: 36px; margin-bottom: 20px; }
+        p { font-size: 16px; line-height: 1.6; }
+        .btn { padding: 15px 30px; background-color: #4CAF50; color: white; font-size: 18px; border: none; border-radius: 8px; cursor: pointer; margin-top: 30px; }
+        .btn:hover { background-color: #45a049; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left">
+<img src="https://mvpromedia.com/wp-content/uploads/2023/07/amd-ultrasound_library.jpg" 
+     width="700px" 
+     style="height: 700px; object-fit: cover;">
+        </div>
+        <div class="right">
+            <h1>Heart Condition Prediction using ML</h1>
+            <p>
+                Welcome to our Heart Health Prediction system. This tool uses machine learning 
+                to help estimate the risk of cardiovascular disease based on your personal health data.
+                Please read the descriptions below carefully. We aim to provide accurate guidance 
+                and insights into your heart condition using your inputs.
+            </p>
+            <p>
+                Our trained Decision Tree model uses features such as age, gender, blood pressure, 
+                cholesterol, glucose, lifestyle habits, and activity levels. Based on your input, 
+                the system predicts your likelihood of having cardiovascular disease.
+            </p>
+            <p>
+                Click the button below to proceed to the form and analyze your heart risk. 
+                Fill out all fields carefully to ensure the most accurate prediction.
+            </p>
+            <button class="btn" onclick="window.location.href='/form'">Analyze Your Heart</button>
+        </div>
+    </div>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CARDIO//OS — Royal Amber Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #03050a;
+  --panel: rgba(10, 15, 30, 0.8);
+  --accent: #FFB800; /* Electric Amber */
+  --accent-secondary: #2E5BFF; /* Royal Cobalt */
+  --prism: linear-gradient(45deg, #FFB800, #2E5BFF, #FF0055, #FFB800);
+  --text: #e0e6ed;
+  --dim: #6b7c93;
+  --border: rgba(255, 184, 0, 0.25);
+  --mono: 'Share Tech Mono', monospace;
+  --sans: 'Space Grotesk', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  background-image: radial-gradient(circle at 50% 50%, #0a0e1a 0%, #03050a 100%);
+  color: var(--text);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ── BOOT SCREEN ── */
+#boot {
+  position: fixed; inset: 0; background: var(--bg); z-index: 9000;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  animation: bootFade 0.4s ease 3.2s forwards; font-family: var(--mono); color: var(--accent);
+}
+.boot-line { opacity: 0; animation: bootType 0.2s ease forwards; font-size: 13px; }
+.boot-bar-wrap { width: 300px; height: 2px; background: rgba(255,184,0,0.1); margin-top: 15px; opacity: 0; animation: bootType 0.3s ease 2s forwards; }
+.boot-bar { height: 100%; background: var(--accent); width: 0; animation: barFill 0.8s ease 2.2s forwards; box-shadow: 0 0 15px var(--accent); }
+
+@keyframes bootType { to { opacity: 1; } }
+@keyframes barFill { to { width: 100%; } }
+@keyframes bootFade { to { opacity: 0; pointer-events: none; } }
+
+/* ── HEADER ── */
+header {
+  padding: 20px 40px; border-bottom: 1px solid var(--border);
+  background: var(--panel); backdrop-filter: blur(20px);
+  display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;
+}
+.logo-text { font-weight: 700; letter-spacing: 4px; color: var(--accent); text-transform: uppercase; text-shadow: 0 0 10px rgba(255,184,0,0.3); }
+.header-status { display: flex; gap: 30px; font-size: 11px; font-family: var(--mono); }
+.status-val { color: var(--accent); display: block; font-weight: 700; font-size: 14px; }
+
+/* ── MAIN GRID ── */
+main { display: grid; grid-template-columns: 1fr 1.3fr; gap: 20px; padding: 25px; max-width: 1600px; margin: 0 auto; }
+
+/* ── HIGHLIGHTED CARDS ── */
+.glass-card {
+  background: var(--panel); border-radius: 20px; border: 1px solid var(--border);
+  padding: 30px; backdrop-filter: blur(15px); position: relative; overflow: hidden;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5), inset 0 0 20px rgba(255, 184, 0, 0.02);
+  transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+  animation: cardPulse 4s infinite ease-in-out;
+}
+.glass-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 184, 0, 0.5);
+  box-shadow: 0 10px 40px rgba(255, 184, 0, 0.1);
+}
+
+@keyframes cardPulse {
+  0%, 100% { box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); }
+  50% { box-shadow: 0 4px 40px rgba(255, 184, 0, 0.05); }
+}
+
+/* ── HERO SECTION ── */
+.hero-title { font-size: 52px; line-height: 0.9; margin-bottom: 20px; font-weight: 700; }
+.hero-title span { color: var(--accent-secondary); display: block; font-size: 16px; letter-spacing: 6px; margin-bottom: 5px; }
+
+.vitals-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin: 30px 0; }
+.vital-box { 
+  background: rgba(255,184,0,0.03); padding: 20px; border-radius: 15px; 
+  text-align: center; border: 1px solid rgba(255,184,0,0.1); 
+}
+.vital-val { font-size: 36px; font-weight: 700; color: var(--accent); display: block; text-shadow: 0 0 15px rgba(255,184,0,0.4); }
+
+.cta-btn {
+  display: inline-block; padding: 18px 40px; background: var(--prism); background-size: 200%;
+  color: #fff; text-decoration: none; border-radius: 12px; font-weight: 700; transition: 0.4s;
+  box-shadow: 0 10px 20px rgba(46, 91, 255, 0.2);
+}
+.cta-btn:hover { transform: scale(1.02); background-position: right center; box-shadow: 0 10px 25px rgba(255, 184, 0, 0.3); }
+
+/* ── RUNNING HEARTBEAT (ECG) ── */
+.ecg-wrap { 
+  height: 120px; margin: 20px 0; background: rgba(0,0,0,0.3); 
+  border-radius: 12px; position: relative; overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+.ecg-line { 
+  stroke: var(--accent); stroke-width: 3; fill: none; 
+  filter: drop-shadow(0 0 8px var(--accent));
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: dash 3s linear infinite;
+}
+
+@keyframes dash {
+  from { stroke-dashoffset: 1000; }
+  to { stroke-dashoffset: 0; }
+}
+
+/* Scanline Overlay */
+.ecg-wrap::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 70%, rgba(255,184,0,0.2) 90%, var(--accent) 100%);
+  width: 100px;
+  animation: scan 3s linear infinite;
+}
+
+@keyframes scan {
+  from { left: -100px; }
+  to { left: 100%; }
+}
+
+/* ── FEATURE MATRIX ── */
+.features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; }
+.f-item { 
+  padding: 15px; background: rgba(255, 255, 255, 0.02); border-radius: 12px; 
+  border-top: 1px solid rgba(255,255,255,0.05);
+  transition: 0.3s;
+}
+.f-item:hover { background: rgba(46, 91, 255, 0.1); border-top-color: var(--accent-secondary); }
+.f-item h4 { font-size: 11px; color: var(--accent); margin-bottom: 6px; letter-spacing: 1px; }
+.f-item p { font-size: 10px; color: var(--dim); line-height: 1.4; }
+
+/* ── PIPELINE ── */
+.pipeline-section { grid-column: 1 / -1; margin-top: 10px; }
+.step-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 25px; }
+.step { text-align: center; }
+.step-num { 
+  width: 45px; height: 45px; border: 2px solid var(--border); border-radius: 50%; 
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; 
+  color: var(--accent); font-weight: 700; transition: 0.3s;
+}
+.step:hover .step-num { border-color: var(--accent); background: rgba(255,184,0,0.1); box-shadow: 0 0 15px var(--accent); }
+
+footer { padding: 40px; text-align: center; font-size: 11px; color: var(--dim); letter-spacing: 1px; }
+
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } .step-row { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<div id="boot">
+  <div class="boot-line" style="animation-delay: 0.1s;">CARDIO//OS v5.1.0 — PRO EDITION</div>
+  <div class="boot-line" style="animation-delay: 0.4s;">› BOOTING AMBER KERNEL ................... OK</div>
+  <div class="boot-line" style="animation-delay: 0.7s;">› CALIBRATING 9 FEATURE MATRIX ............ OK</div>
+  <div class="boot-line" style="animation-delay: 1.0s;">› HEARTBEAT RHYTHM_SYNC ACTIVE ............ OK</div>
+  <div class="boot-line" style="animation-delay: 1.3s;">SYSTEM READY — INTERFACE DEPLOYED</div>
+  <div class="boot-bar-wrap"><div class="boot-bar"></div></div>
+</div>
+
+<header>
+  <div class="logo-text">CARDIO//OS</div>
+  <div class="header-status">
+    <div>STATUS <span class="status-val">SYNCED</span></div>
+    <div>LOCAL_TIME <span class="status-val" id="liveTime">--:--:--</span></div>
+    <div>NODE <span class="status-val" id="sessionId">CRD-XXXX</span></div>
+  </div>
+</header>
+
+<main>
+  <section class="glass-card">
+    <div style="font-size: 12px; color: var(--accent-secondary); font-family: var(--mono); margin-bottom: 10px;">[ PROCESS_INITIALIZATION ]</div>
+    <h1 class="hero-title"><span>CARDIAC RISK</span>PREDICTION<br>ENGINE</h1>
+    <p style="color: var(--dim); font-size: 15px; line-height: 1.7; margin-bottom: 20px;">Deploying high-fidelity decision trees to synthesize patient biometrics into actionable risk intelligence.</p>
+    
+    <div class="vitals-row">
+      <div class="vital-box"><span class="vital-val" id="bpm">72</span><span style="font-size: 10px; color: var(--dim); letter-spacing: 1px;">LIVE BPM</span></div>
+      <div class="vital-box"><span class="vital-val">0.7267</span><span style="font-size: 10px; color: var(--dim); letter-spacing: 1px;">Accuracy</span></div>
+      <div class="vital-box"><span class="vital-val">0.7412%</span><span style="font-size: 10px; color: var(--dim); letter-spacing: 1px;">Precision</span></div>
+    </div>
+                <button class="cta-btn" onclick="window.location.href='/form'">Analyze Your Heart</button>
+
+    <!-- <a href="#" class="cta-btn">ANALYZE NEW PATIENT</a> -->
+  </section>
+
+  <section class="right-col">
+    <div class="glass-card" style="margin-bottom: 20px;">
+      <div style="font-size: 11px; margin-bottom: 15px; color: var(--accent); font-family: var(--mono);">LIVE_BIO_STREAM // ECG_PRIMARY</div>
+      <div class="ecg-wrap">
+        <svg width="100%" height="100%" viewBox="0 0 1000 100" preserveAspectRatio="none">
+          <path class="ecg-line" d="M0,50 L100,50 L110,20 L125,80 L140,50 L300,50 L310,20 L325,80 L340,50 L500,50 L510,20 L525,80 L540,50 L700,50 L710,20 L725,80 L740,50 L1000,50" />
+        </svg>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 12px; font-family: var(--mono);">
+        <span>BP: <span style="color:var(--accent)">118/79</span></span>
+        <span>SPO2: <span style="color:var(--accent)">99%</span></span>
+        <span>STRESS: <span style="color:var(--accent)">NOMINAL</span></span>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div style="font-size: 11px; margin-bottom: 15px; color: var(--dim); font-family: var(--mono);">FEATURE_MATRIX // CORE_WEIGHTS</div>
+      <div class="features-grid">
+        <div class="f-item"><h4>AGE</h4><p>Vascular aging factor.</p></div>
+        <div class="f-item"><h4>GENDER</h4><p>Biological risk profile.</p></div>
+        <div class="f-item"><h4>BMI</h4><p>Metabolic mass index.</p></div>
+        <div class="f-item"><h4>BLOOD PR.</h4><p>Hypertension load.</p></div>
+        <div class="f-item"><h4>CHOL.</h4><p>Lipid concentration.</p></div>
+        <div class="f-item"><h4>GLUCOSE</h4><p>Endothelial health.</p></div>
+        <div class="f-item"><h4>SMOKE</h4><p>Oxidative stress level.</p></div>
+        <div class="f-item"><h4>ALCOHOL</h4><p>Toxicity screening.</p></div>
+        <div class="f-item"><h4>ACTIVITY</h4><p>V.O2 output metrics.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="glass-card pipeline-section">
+    <div style="font-size: 11px; color: var(--dim); font-family: var(--mono);">DIAGNOSTIC_PIPELINE // SECURE_FLOW</div>
+    <div class="step-row">
+      <div class="step"><div class="step-num">01</div><div style="font-size: 13px; font-weight:700;">DATA_ENTRY</div></div>
+      <div class="step"><div class="step-num">02</div><div style="font-size: 13px; font-weight:700;">PRE_PROCESS</div></div>
+      <div class="step"><div class="step-num">03</div><div style="font-size: 13px; font-weight:700;">ML_INFERENCE</div></div>
+      <div class="step"><div class="step-num">04</div><div style="font-size: 13px; font-weight:700;">RESULT_OUTPUT</div></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  SYSTEM_ARCH: CARDIO//OS v5.1.0 — ENCRYPTED BIO-DATA NODE — 2026
+</footer>
+
+<script>
+// Dynamic Clock
+function updateTime() { 
+  document.getElementById('liveTime').textContent = new Date().toTimeString().slice(0,8); 
+}
+setInterval(updateTime, 1000); 
+updateTime();
+
+// Random Session ID
+document.getElementById('sessionId').textContent = 'CRD-' + Math.random().toString(36).substring(2,8).toUpperCase();
+
+// Smooth BPM simulation
+let baseBPM = 72;
+setInterval(() => {
+  baseBPM += (Math.random() - 0.5) * 3;
+  document.getElementById('bpm').textContent = Math.round(baseBPM);
+}, 1500);
+</script>
+
+</body>
+</html>
