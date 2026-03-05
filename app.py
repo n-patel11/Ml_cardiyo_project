@@ -221,71 +221,137 @@
 # if __name__ == "__main__":
 #     app.run(host="0.0.0.0", port=5000)
 
-from flask import Flask, request, jsonify
+from flask import Flask, render_template, request
 import numpy as np
-import pandas as pd
-from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-import joblib
+import pickle
 import os
 
 app = Flask(__name__)
 
-# Load model if exists
-MODEL_PATH = "model.pkl"
+# ---------------------------
+# Decision Tree Classes
+# ---------------------------
+
+class Node:
+    def __init__(self, feature=None, threshold=None, left=None, right=None, value=None):
+        self.feature = feature
+        self.threshold = threshold
+        self.left = left
+        self.right = right
+        self.value = value
+
+class DecisionTreeScratch:
+    def __init__(self, max_depth=5):
+        self.max_depth = max_depth
+
+    def predict_sample(self, x, node):
+        if node.value is not None:
+            return node.value
+        if x[node.feature] <= node.threshold:
+            return self.predict_sample(x, node.left)
+        else:
+            return self.predict_sample(x, node.right)
+
+    def predict(self, X):
+        return np.array([self.predict_sample(x, self.root) for x in X])
+
+    # Prediction with explanation path
+    def predict_with_path(self, x):
+        node = self.root
+        path = []
+        while node.value is None:
+            feature = node.feature
+            threshold = node.threshold
+            if x[feature] <= threshold:
+                path.append((feature, threshold, "<="))
+                node = node.left
+            else:
+                path.append((feature, threshold, ">"))
+                node = node.right
+        return node.value, path
+
+# ---------------------------
+# Load Trained Model
+# ---------------------------
+
+MODEL_PATH = "cardio_model.pkl"
+
 if os.path.exists(MODEL_PATH):
-    model = joblib.load(MODEL_PATH)
+    with open(MODEL_PATH, "rb") as f:
+        tree = pickle.load(f)
+    print("Model loaded successfully!")
 else:
-    model = None
+    tree = None
+    print("cardio_model.pkl not found. Please upload your model!")
+
+# ---------------------------
+# Feature Names
+# ---------------------------
+
+feature_names = [
+    "Age", "Gender", "Height", "Weight",
+    "Systolic BP", "Diastolic BP", "Cholesterol",
+    "Glucose", "Smoking", "Alcohol", "Physical Activity"
+]
+
+# ---------------------------
+# Flask Routes
+# ---------------------------
 
 @app.route("/")
 def home():
-    return "ML Cardiyo Project API is running!"
+    return render_template("index.html")
 
-@app.route("/train", methods=["POST"])
-def train_model():
-    data = request.get_json()
-    
-    if not data or "features" not in data or "target" not in data:
-        return jsonify({"error": "Invalid input. Provide 'features' and 'target' arrays."}), 400
-    
-    X = np.array(data["features"])
-    y = np.array(data["target"])
-
-    # Scale features
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X)
-
-    # Train model
-    global model
-    model = LinearRegression()
-    model.fit(X_scaled, y)
-
-    # Save model
-    joblib.dump(model, MODEL_PATH)
-    joblib.dump(scaler, "scaler.pkl")
-
-    return jsonify({"message": "Model trained and saved successfully!"})
+@app.route("/form")
+def form():
+    return render_template("form.html")
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    if model is None:
-        return jsonify({"error": "Model not trained yet."}), 400
+    if tree is None:
+        return "Model not loaded. Please upload cardio_model.pkl.", 500
 
-    data = request.get_json()
-    if not data or "features" not in data:
-        return jsonify({"error": "Invalid input. Provide 'features' array."}), 400
+    try:
+        X = np.array([[
+            float(request.form["age"]),
+            int(request.form["gender"]),
+            float(request.form["height"]),
+            float(request.form["weight"]),
+            float(request.form["ap_hi"]),
+            float(request.form["ap_lo"]),
+            int(request.form["cholesterol"]),
+            int(request.form["gluc"]),
+            int(request.form["smoke"]),
+            int(request.form["alco"]),
+            int(request.form["active"])
+        ]])
+    except Exception as e:
+        return f"Invalid input: {e}", 400
 
-    features = np.array(data["features"]).reshape(1, -1)
+    prediction, path = tree.predict_with_path(X[0])
+    risk_reasons = []
 
-    # Load scaler
-    scaler = joblib.load("scaler.pkl")
-    features_scaled = scaler.transform(features)
+    for feature, threshold, condition in path:
+        value = X[0][feature]
+        if condition == ">" and value > threshold:
+            risk_reasons.append(f"{feature_names[feature]} is high ({value})")
 
-    prediction = model.predict(features_scaled)
+    if prediction == 1:
+        result_text = "High risk of cardiovascular disease! Please consult a doctor."
+    else:
+        result_text = "Low risk of cardiovascular disease. Keep maintaining healthy habits!"
+        risk_reasons = []
 
-    return jsonify({"prediction": prediction.tolist()})
+    return render_template(
+        "form.html",
+        prediction_text=result_text,
+        risk_reasons=risk_reasons
+    )
+
+# ---------------------------
+# Run App (Render Compatible)
+# ---------------------------
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
