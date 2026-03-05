@@ -223,7 +223,7 @@
 
 from flask import Flask, render_template, request, jsonify
 import numpy as np
-import dill  # safer pickle alternative for custom classes
+from my_tree_module import DecisionTreeScratch  # <-- add this
 import os
 import pandas as pd
 
