@@ -230,8 +230,9 @@ import os
 app = Flask(__name__)
 
 # ---------------------------
-# Node Class
+# Decision Tree Classes
 # ---------------------------
+
 class Node:
     def __init__(self, feature=None, threshold=None, left=None, right=None, value=None):
         self.feature = feature
@@ -241,31 +242,95 @@ class Node:
         self.value = value
 
 
-# ---------------------------
-# Decision Tree Class
-# ---------------------------
 class DecisionTreeScratch:
-
     def __init__(self, max_depth=5):
         self.max_depth = max_depth
+        self.root = None
+
+    def gini(self, y):
+        m = len(y)
+        if m == 0:
+            return 0
+        p1 = np.sum(y) / m
+        p0 = 1 - p1
+        return 1 - (p0**2 + p1**2)
+
+    def best_split(self, X, y):
+        best_gini = 1
+        best_feature = None
+        best_threshold = None
+
+        n_samples, n_features = X.shape
+
+        for feature in range(n_features):
+            thresholds = np.unique(X[:, feature])
+
+            for threshold in thresholds:
+                left_idx = X[:, feature] <= threshold
+                right_idx = X[:, feature] > threshold
+
+                if len(y[left_idx]) == 0 or len(y[right_idx]) == 0:
+                    continue
+
+                gini_left = self.gini(y[left_idx])
+                gini_right = self.gini(y[right_idx])
+
+                weighted_gini = (
+                    len(y[left_idx]) / n_samples * gini_left +
+                    len(y[right_idx]) / n_samples * gini_right
+                )
+
+                if weighted_gini < best_gini:
+                    best_gini = weighted_gini
+                    best_feature = feature
+                    best_threshold = threshold
+
+        return best_feature, best_threshold
+
+    def build_tree(self, X, y, depth=0):
+
+        if len(np.unique(y)) == 1:
+            return Node(value=y[0])
+
+        if depth >= self.max_depth:
+            return Node(value=np.round(np.mean(y)))
+
+        feature, threshold = self.best_split(X, y)
+
+        if feature is None:
+            return Node(value=np.round(np.mean(y)))
+
+        left_idx = X[:, feature] <= threshold
+        right_idx = X[:, feature] > threshold
+
+        left = self.build_tree(X[left_idx], y[left_idx], depth+1)
+        right = self.build_tree(X[right_idx], y[right_idx], depth+1)
+
+        return Node(feature, threshold, left, right)
+
+    def fit(self, X, y):
+        self.root = self.build_tree(X, y)
 
     def predict_sample(self, x, node):
+
         if node.value is not None:
             return node.value
 
         if x[node.feature] <= node.threshold:
             return self.predict_sample(x, node.left)
-        else:
-            return self.predict_sample(x, node.right)
+
+        return self.predict_sample(x, node.right)
 
     def predict(self, X):
         return np.array([self.predict_sample(x, self.root) for x in X])
 
     def predict_with_path(self, x):
+
         node = self.root
         path = []
 
         while node.value is None:
+
             feature = node.feature
             threshold = node.threshold
 
@@ -280,25 +345,17 @@ class DecisionTreeScratch:
 
 
 # ---------------------------
-# Load Model
+# Train Model Function
 # ---------------------------
 
-MODEL_PATH = "cardio_model.pkl"
+def train_model():
 
-if os.path.exists(MODEL_PATH):
-
-    with open(MODEL_PATH, "rb") as f:
-        tree = pickle.load(f)
-
-    print("Model loaded successfully!")
-
-else:
-
-    print("Model file not found!")
+    print("Training model...")
 
     df = pd.read_csv("cardio_train.csv", sep=";")
 
     df = df.drop("id", axis=1)
+
     df["age"] = df["age"] / 365
 
     df = df[(df["ap_hi"] > 0) & (df["ap_lo"] > 0)]
@@ -319,6 +376,32 @@ else:
         pickle.dump(tree, f)
 
     print("Model trained and saved!")
+
+    return tree
+
+
+# ---------------------------
+# Load Model Safely
+# ---------------------------
+
+MODEL_PATH = "cardio_model.pkl"
+
+if os.path.exists(MODEL_PATH):
+
+    try:
+        with open(MODEL_PATH, "rb") as f:
+            tree = pickle.load(f)
+
+        print("Model loaded successfully!")
+
+    except Exception as e:
+
+        print("Model load failed. Retraining...", e)
+        tree = train_model()
+
+else:
+
+    tree = train_model()
 
 
 # ---------------------------
@@ -341,7 +424,7 @@ feature_names = [
 
 
 # ---------------------------
-# Routes
+# Flask Routes
 # ---------------------------
 
 @app.route("/")
@@ -377,14 +460,16 @@ def predict():
     risk_reasons = []
 
     for feature, threshold, condition in path:
+
         value = X[0][feature]
+
         if condition == ">" and value > threshold:
             risk_reasons.append(f"{feature_names[feature]} is high ({value})")
 
     if prediction == 1:
         result_text = "High risk of cardiovascular disease! Please consult a doctor."
     else:
-        result_text = "Low risk of cardiovascular disease."
+        result_text = "Low risk of cardiovascular disease. Keep maintaining healthy habits!"
         risk_reasons = []
 
     return render_template(
@@ -393,6 +478,10 @@ def predict():
         risk_reasons=risk_reasons
     )
 
+
+# ---------------------------
+# Run Server
+# ---------------------------
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
