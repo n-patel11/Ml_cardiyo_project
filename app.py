@@ -234,12 +234,13 @@ app = Flask(__name__)
 # ---------------------------
 
 class Node:
-    def __init__(self, feature=None, threshold=None, left=None, right=None, value=None):
+    def __init__(self, feature=None, threshold=None, left=None, right=None, value=None, proba=None):
         self.feature = feature
         self.threshold = threshold
         self.left = left
         self.right = right
         self.value = value
+        self.proba = proba
 
 
 class DecisionTreeScratch:
@@ -290,15 +291,19 @@ class DecisionTreeScratch:
     def build_tree(self, X, y, depth=0):
 
         if len(np.unique(y)) == 1:
-            return Node(value=y[0])
+            return Node(value=y[0], proba=float(y[0]))
 
         if depth >= self.max_depth:
-            return Node(value=np.round(np.mean(y)))
+            val = np.round(np.mean(y))
+            proba = np.mean(y)
+            return Node(value=val, proba=proba)
 
         feature, threshold = self.best_split(X, y)
 
         if feature is None:
-            return Node(value=np.round(np.mean(y)))
+            val = np.round(np.mean(y))
+            proba = np.mean(y)
+            return Node(value=val, proba=proba)
 
         left_idx = X[:, feature] <= threshold
         right_idx = X[:, feature] > threshold
@@ -341,7 +346,7 @@ class DecisionTreeScratch:
                 path.append((feature, threshold, ">"))
                 node = node.right
 
-        return node.value, path
+        return node.value, node.proba, path
 
 
 # ---------------------------
@@ -440,6 +445,20 @@ def form():
 @app.route("/predict", methods=["POST"])
 def predict():
 
+    patient_data = {
+        "Age": int(float(request.form["age"])),
+        "Gender": "Male" if int(request.form["gender"]) == 2 else "Female",
+        "Height (cm)": float(request.form["height"]),
+        "Weight (kg)": float(request.form["weight"]),
+        "Systolic BP": float(request.form["ap_hi"]),
+        "Diastolic BP": float(request.form["ap_lo"]),
+        "Cholesterol": int(request.form["cholesterol"]),
+        "Glucose": int(request.form["gluc"]),
+        "Smoking": "Yes" if int(request.form["smoke"]) == 1 else "No",
+        "Alcohol": "Yes" if int(request.form["alco"]) == 1 else "No",
+        "Physical Activity": "Yes" if int(request.form["active"]) == 1 else "No"
+    }
+
     age = float(request.form["age"])
     gender = int(request.form["gender"])
     height = float(request.form["height"])
@@ -455,7 +474,30 @@ def predict():
     X = np.array([[age, gender, height, weight, ap_hi, ap_lo,
                    cholesterol, gluc, smoke, alco, active]])
 
-    prediction, path = tree.predict_with_path(X[0])
+    prediction, proba, path = tree.predict_with_path(X[0])
+
+    confidence_pct = round((proba if prediction == 1 else 1 - proba) * 100)
+    risk_prob_pct = round(proba * 100)
+    
+    # Calculate simple health score
+    health_score = 100 - (risk_prob_pct * 0.8) # Base score minus risk penalty
+    
+    # Deduct points for obvious risk factors
+    detected_risks = []
+    if cholesterol > 1:
+        detected_risks.append("High Cholesterol")
+        health_score -= 5
+    if ap_hi >= 130 or ap_lo >= 80:
+        detected_risks.append("High Blood Pressure")
+        health_score -= 5
+    if smoke == 1:
+        detected_risks.append("Smoking Habit")
+        health_score -= 5
+    if active == 0:
+        detected_risks.append("Lack of Physical Activity")
+        health_score -= 5
+        
+    health_score = max(0, min(100, round(health_score)))
 
     risk_reasons = []
 
@@ -466,16 +508,39 @@ def predict():
         if condition == ">" and value > threshold:
             risk_reasons.append(f"{feature_names[feature]} is high ({value})")
 
+    # Recommendations based on inputs
+    recommendations = []
+    if active == 0: recommendations.append("Exercise at least 30 minutes daily")
+    if cholesterol > 1: recommendations.append("Eat low-cholesterol food")
+    if smoke == 1 or alco == 1: recommendations.append("Avoid smoking and alcohol")
+    bmi = weight / ((height/100)**2)
+    if bmi > 25: recommendations.append("Maintain healthy weight")
+    recommendations.append("Schedule regular health checkups")
+
     if prediction == 1:
-        result_text = "High risk of cardiovascular disease! Please consult a doctor."
+        result_text = "⚠️ High Risk of Cardiovascular Disease Detected. Please consult a doctor and improve lifestyle habits."
+        risk_level = "High"
     else:
-        result_text = "Low risk of cardiovascular disease. Keep maintaining healthy habits!"
+        result_text = "✅ Low Risk of Cardiovascular Disease. Maintain a healthy lifestyle and regular checkups."
+        risk_level = "Low"
         risk_reasons = []
 
+    if 50 <= risk_prob_pct <= 70 and prediction == 0:
+         risk_level = "Medium"
+
     return render_template(
-        "form.html",
+        "result.html",
+        prediction=prediction,
         prediction_text=result_text,
-        risk_reasons=risk_reasons
+        risk_reasons=risk_reasons,
+        risk_level=risk_level,
+        confidence_pct=confidence_pct,
+        risk_prob_pct=risk_prob_pct,
+        health_score=health_score,
+        patient_data=patient_data,
+        detected_risks=detected_risks,
+        recommendations=recommendations,
+        bmi=round(bmi, 1)
     )
 
 

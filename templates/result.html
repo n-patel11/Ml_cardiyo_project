@@ -1,0 +1,1102 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Health Dashboard | Result</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            light: '#ffe4e6',
+                            DEFAULT: '#e11d48',
+                            dark: '#be123c',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom CSS add-ons that aren't natively perfect in Tailwind */
+        body { font-family: 'Inter', sans-serif; background-color: #010911; }
+        .glass-card {
+            background: rgba(12, 0, 0, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+        
+        .heartbeat {
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            15% { transform: scale(1.15); }
+            30% { transform: scale(1); }
+            45% { transform: scale(1.15); }
+            60% { transform: scale(1); }
+        }
+
+        /* Progress Bar Animation */
+        .progress-bar-fill {
+            transition: width 1.5s ease-in-out;
+        }
+
+        /* Print formatting */
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white; }
+            .glass-card { box-shadow: none; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen pb-12">
+
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.href='/'">
+                    <svg class="w-8 h-8 text-brand heartbeat" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" />
+                    </svg>
+                    <span class="text-xl font-bold text-gray-900 tracking-tight">CardioGuard AI</span>
+                </div>
+                <div class="space-x-4">
+                    <button onclick="window.location.href='/form'" class="text-gray-600 hover:text-brand font-medium transition-colors">Start Over</button>
+                    <button id="downloadPdfBtn" class="no-print bg-gray-900 hover:bg-gray-800 text-white px-5 py-2 rounded-full font-medium shadow-sm transition-all transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Download Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="dashboard-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 space-y-6">
+
+        <div class="rounded-2xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-6 glass-card {% if risk_level == 'High' %}bg-red-50/50 border-red-100{% elif risk_level == 'Medium' %}bg-yellow-50/50 border-yellow-100{% else %}bg-green-50/50 border-green-100{% endif %}">
+            <div class="flex-shrink-0 relative">
+                <div class="w-24 h-24 rounded-full flex items-center justify-center {% if risk_level == 'High' %}bg-red-100 text-red-600 heartbeat{% elif risk_level == 'Medium' %}bg-yellow-100 text-yellow-600{% else %}bg-green-100 text-green-600{% endif %} shadow-inner">
+                    {% if risk_level == 'High' %}
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    {% elif risk_level == 'Medium' %}
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    {% else %}
+                        <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="flex-1 text-center md:text-left">
+                <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-2">
+                    <h2 class="text-2xl font-bold text-gray-900">Analysis Complete</h2>
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold uppercase tracking-wider
+                        {% if risk_level == 'High' %}bg-red-500 text-white
+                        {% elif risk_level == 'Medium' %}bg-yellow-400 text-yellow-900
+                        {% else %}bg-green-500 text-white{% endif %}">
+                        {{ risk_level }} Risk
+                    </span>
+                </div>
+                <p class="text-lg text-gray-700 font-medium">{{ prediction_text }}</p>
+            </div>
+
+            <div class="text-center md:text-right border-t md:border-t-0 md:border-l border-gray-200 pt-4 md:pt-0 md:pl-6">
+                <p class="text-sm font-medium text-gray-500 uppercase tracking-wide">Model Confidence</p>
+                <div class="text-4xl font-extrabold text-gray-900 mt-1">{{ confidence_pct }}<span class="text-xl text-gray-500">%</span></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <div class="space-y-6 lg:col-span-1">
+                
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                        Overall Health Score
+                    </h3>
+                    <div class="relative w-40 h-40 mx-auto">
+                        <canvas id="healthScoreChart"></canvas>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-4xl font-black {% if health_score >= 80 %}text-green-500{% elif health_score >= 50 %}text-yellow-500{% else %}text-red-500{% endif %}">
+                                {{ health_score }}
+                            </span>
+                            <span class="text-xs font-semibold text-gray-400 uppercase">/ 100</span>
+                        </div>
+                    </div>
+                    <p class="text-center mt-4 text-sm font-medium text-gray-600">
+                        {% if health_score >= 80 %}Excellent health metrics.{% elif health_score >= 50 %}Moderate health. Room for improvement.{% else %}Critical focus needed on health.{% endif %}
+                    </p>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4">Heart Disease Risk</h3>
+                    <div class="mb-2 flex justify-between items-end">
+                        <span class="text-3xl font-bold text-gray-900">{{ risk_prob_pct }}%</span>
+                        <span class="text-sm font-medium text-gray-500 mb-1">Probability</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-4 mb-4 relative overflow-hidden">
+                        <div class="progress-bar-fill h-4 rounded-full {% if risk_level == 'High' %}bg-gradient-to-r from-red-400 to-red-600{% elif risk_level == 'Medium' %}bg-gradient-to-r from-yellow-400 to-yellow-500{% else %}bg-gradient-to-r from-green-400 to-green-500{% endif %}" 
+                             style="width: 0%" id="riskProgressBar"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 font-medium">
+                        <span>Low (0%)</span>
+                        <span>High (100%)</span>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6">
+                    <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        Detected Risk Factors
+                    </h3>
+                    {% if detected_risks|length > 0 %}
+                        <ul class="space-y-3">
+                            {% for risk in detected_risks %}
+                            <li class="flex items-start gap-3 bg-red-50 p-3 rounded-lg border border-red-100">
+                                <span class="text-red-500 mt-0.5">⚠️</span>
+                                <span class="text-sm font-medium text-red-900">{{ risk }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="bg-green-50 border border-green-100 rounded-lg p-4 text-center">
+                            <span class="text-green-500 text-2xl block mb-2">🎉</span>
+                            <p class="text-sm text-green-800 font-medium">No major risk factors detected based on inputs.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+            <div class="lg:col-span-2 space-y-6">
+                
+                <div class="glass-card rounded-2xl p-6 pb-8">
+                    <h3 class="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        Patient Profile Summary
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        {% for key, value in patient_data.items() %}
+                        <div class="bg-gray-50 rounded-xl p-4 border border-gray-100">
+                            <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">{{ key }}</p>
+                            <p class="text-lg font-bold text-gray-900">{{ value }}</p>
+                        </div>
+                        {% endfor %}
+                        <div class="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                            <p class="text-xs text-blue-600 font-medium uppercase tracking-wider mb-1">BMI</p>
+                            <p class="text-lg font-bold text-blue-900">{{ bmi }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="glass-card rounded-2xl p-6">
+                        <h3 class="text-sm font-bold text-gray-700 uppercase mb-4 text-center">Blood Pressure Analysis</h3>
+                        <div class="h-48 relative">
+                            <canvas id="bpChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <div class="glass-card rounded-2xl p-6">
+                        <h3 class="text-sm font-bold text-gray-700 uppercase mb-4 text-center">Cholesterol vs Normal (Factor)</h3>
+                        <div class="h-48 relative">
+                            <canvas id="cholesterolChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-100">
+                    <h3 class="text-lg font-bold text-indigo-900 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                        Actionable Recommendations
+                    </h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {% for rec in recommendations %}
+                        <div class="flex items-center gap-3 bg-white/80 p-3 rounded-xl shadow-sm border border-indigo-100/50">
+                            <div class="bg-indigo-100 text-indigo-600 rounded-full p-1 border border-indigo-200">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path></svg>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-800">{{ rec }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="mt-12 border-t border-gray-200 pt-8 pb-6 text-center text-gray-500 text-sm">
+        <p>&copy; 2024 CardioGuard AI. All rights reserved.</p>
+        <p class="mt-1">Disclaimer: This is an AI prediction tool and should not replace professional medical advice.</p>
+    </footer>
+
+    <script>
+        setTimeout(() => {
+            document.getElementById('riskProgressBar').style.width = '{{ risk_prob_pct }}%';
+        }, 300);
+
+        // Chart defaults
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#64748b';
+        Chart.defaults.scale.grid.color = '#f1f5f9';
+
+        // 1. Health Score Doughnut Chart
+        const scoreCtx = document.getElementById('healthScoreChart').getContext('2d');
+        const score = {{ health_score }};
+        let scoreColor = '#22c55e'; // Green
+        if(score < 50) scoreColor = '#ef4444'; // Red
+        else if(score < 80) scoreColor = '#eab308'; // Yellow
+
+        new Chart(scoreCtx, {
+            type: 'doughnut',
+            data: {
+                datasets: [{
+                    data: [score, 100 - score],
+                    backgroundColor: [scoreColor, '#f1f5f9'],
+                    borderWidth: 0,
+                    borderRadius: 20,
+                    cutout: '80%'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { tooltip: { enabled: false }, legend: { display: false } },
+                animation: { animateScale: true, animateRotate: true }
+            }
+        });
+
+        // 2. Blood Pressure Bar Chart (User vs Normal)
+        const bpCtx = document.getElementById('bpChart').getContext('2d');
+        const userSysId = {{ patient_data['Systolic BP'] }};
+        const userDiaId = {{ patient_data['Diastolic BP'] }};
+        
+        new Chart(bpCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Systolic', 'Diastolic'],
+                datasets: [
+                    {
+                        label: 'Your BP',
+                        data: [userSysId, userDiaId],
+                        backgroundColor: '#6366f1',
+                        borderRadius: 6
+                    },
+                    {
+                        label: 'Normal BP',
+                        data: [120, 80],
+                        backgroundColor: '#cbd5e1',
+                        borderRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, suggestedMax: 200 }
+                },
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 8 } }
+                }
+            }
+        });
+
+        // 3. Cholesterol Bar Chart
+        const cholCtx = document.getElementById('cholesterolChart').getContext('2d');
+        const userChol = {{ patient_data['Cholesterol'] }}; // 1: normal, 2: above normal, 3: well above normal
+        
+        new Chart(cholCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Cholesterol Level'],
+                datasets: [{
+                    label: 'Your Level (1-3)',
+                    data: [userChol],
+                    backgroundColor: [
+                        userChol === 1 ? '#22c55e' : (userChol === 2 ? '#eab308' : '#ef4444')
+                    ],
+                    borderRadius: 8,
+                    barThickness: 60
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: { min: 0, max: 3, ticks: { stepSize: 1 } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let val = context.raw;
+                                if(val === 1) return 'Normal';
+                                if(val === 2) return 'Above Normal';
+                                return 'Well Above Normal';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // PDF Generation Logic
+        document.getElementById('downloadPdfBtn').addEventListener('click', function() {
+            const element = document.getElementById('dashboard-content');
+            const opt = {
+                margin:       [0.5, 0.5, 0.5, 0.5],
+                filename:     'Heart_Health_Report.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+            };
+
+            // Add loading state to button
+            const btn = this;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline ml-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Generating...`;
+            
+            html2pdf().set(opt).from(element).save().then(() => {
+                btn.innerHTML = originalText;
+            });
+        });
+    </script>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CARDIO//OS — Heart Health Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --bg: #03050a;
+            --panel: #0a0f1e;
+            --accent: #FFB800;
+            --accent-blue: #2E5BFF;
+            --accent-green: #00ff88;
+            --accent-red: #ff4d4d;
+            --text: #e0e6ed;
+            --dim: #6b7c93;
+            --border: rgba(255, 184, 0, 0.25);
+            --border-blue: rgba(46, 91, 255, 0.25);
+            --mono: 'Share Tech Mono', monospace;
+            --sans: 'Space Grotesk', sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--sans);
+            background: #03050a;
+            color: #e0e6ed;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,184,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,184,0,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: -20%; left: 50%;
+            transform: translateX(-50%);
+            width: 800px; height: 500px;
+            background: radial-gradient(ellipse at center, rgba(255,184,0,0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* NAV */
+        nav {
+            position: sticky; top: 0; z-index: 100;
+            background: rgba(3,5,10,0.95);
+            border-bottom: 1px solid rgba(255,184,0,0.25);
+            backdrop-filter: blur(20px);
+        }
+        .nav-inner {
+            max-width: 1280px; margin: 0 auto; padding: 0 24px;
+            height: 64px; display: flex; align-items: center; justify-content: space-between;
+        }
+        .nav-brand { display: flex; align-items: center; gap: 10px; cursor: pointer; text-decoration: none; }
+        .nav-logo {
+            width: 36px; height: 36px;
+            background: linear-gradient(45deg, #FFB800, #2E5BFF);
+            border-radius: 8px; display: flex; align-items: center; justify-content: center;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        .nav-logo svg { width: 20px; height: 20px; color: white; }
+        .nav-title { font-family: var(--mono); font-size: 15px; letter-spacing: 3px; color: #FFB800; }
+        .nav-actions { display: flex; align-items: center; gap: 12px; }
+        .btn-ghost {
+            font-family: var(--mono); font-size: 12px; letter-spacing: 1px;
+            color: #6b7c93; background: none;
+            border: 1px solid rgba(255,184,0,0.15);
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; transition: all 0.3s;
+        }
+        .btn-ghost:hover { color: #FFB800; border-color: rgba(255,184,0,0.25); }
+        .btn-primary {
+            font-family: var(--mono); font-size: 12px; letter-spacing: 1px;
+            color: #000; background: linear-gradient(45deg, #FFB800, #2E5BFF);
+            border: none; padding: 9px 20px; border-radius: 8px; cursor: pointer;
+            display: flex; align-items: center; gap: 8px; font-weight: 700; transition: all 0.3s;
+        }
+        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 25px rgba(255,184,0,0.4); }
+
+        /* PANELS */
+        .panel {
+            background: #0a0f1e;
+            border: 1px solid rgba(255,184,0,0.25);
+            border-radius: 16px;
+            box-shadow: 0 0 20px rgba(255,184,0,0.08), 0 4px 30px rgba(0,0,0,0.7);
+            position: relative; overflow: hidden;
+        }
+        .panel::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,184,0,0.5), transparent);
+        }
+        .panel-blue {
+            border-color: rgba(46,91,255,0.25);
+            box-shadow: 0 0 20px rgba(46,91,255,0.1), 0 4px 30px rgba(0,0,0,0.7);
+        }
+        .panel-blue::before { background: linear-gradient(90deg, transparent, rgba(46,91,255,0.5), transparent); }
+
+        /* LAYOUT */
+        main {
+            max-width: 1280px; margin: 0 auto;
+            padding: 32px 24px 60px;
+            position: relative; z-index: 1;
+            display: flex; flex-direction: column; gap: 24px;
+        }
+        .section-label {
+            font-family: var(--mono); font-size: 11px; letter-spacing: 3px;
+            color: #FFB800; margin-bottom: 16px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .section-label::after {
+            content: ''; flex: 1; height: 1px;
+            background: linear-gradient(90deg, rgba(255,184,0,0.25), transparent);
+        }
+
+        /* BANNER */
+        .result-banner {
+            padding: 32px 36px; display: flex; align-items: center; gap: 28px; flex-wrap: wrap;
+        }
+        .risk-icon {
+            width: 88px; height: 88px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .risk-icon.high {
+            background: rgba(255,77,77,0.1); border: 2px solid rgba(255,77,77,0.4);
+            box-shadow: 0 0 30px rgba(255,77,77,0.3);
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        .risk-icon.medium { background: rgba(255,184,0,0.1); border: 2px solid rgba(255,184,0,0.4); box-shadow: 0 0 30px rgba(255,184,0,0.3); }
+        .risk-icon.low { background: rgba(0,255,136,0.1); border: 2px solid rgba(0,255,136,0.4); box-shadow: 0 0 30px rgba(0,255,136,0.3); }
+        .risk-icon svg { width: 40px; height: 40px; }
+        .risk-icon.high svg { color: #ff4d4d; }
+        .risk-icon.medium svg { color: #FFB800; }
+        .risk-icon.low svg { color: #00ff88; }
+        .banner-text { flex: 1; }
+        .banner-title { font-family: var(--mono); font-size: 13px; letter-spacing: 3px; color: #6b7c93; margin-bottom: 8px; }
+        .banner-prediction { font-size: 22px; font-weight: 700; color: #e0e6ed; margin-bottom: 12px; }
+        .risk-badge { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: 2px; padding: 4px 14px; border-radius: 20px; font-weight: 700; }
+        .risk-badge.high { background: rgba(255,77,77,0.15); color: #ff4d4d; border: 1px solid rgba(255,77,77,0.4); }
+        .risk-badge.medium { background: rgba(255,184,0,0.15); color: #FFB800; border: 1px solid rgba(255,184,0,0.25); }
+        .risk-badge.low { background: rgba(0,255,136,0.15); color: #00ff88; border: 1px solid rgba(0,255,136,0.4); }
+        .confidence-block { text-align: center; padding-left: 32px; border-left: 1px solid rgba(255,184,0,0.25); }
+        .confidence-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: #6b7c93; margin-bottom: 6px; }
+        .confidence-value {
+            font-family: var(--mono); font-size: 48px; font-weight: 700;
+            background: linear-gradient(135deg, #FFB800, #2E5BFF);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; line-height: 1;
+        }
+        .confidence-unit { font-family: var(--mono); font-size: 16px; color: #6b7c93; }
+
+        /* GRID */
+        .grid-main { display: grid; grid-template-columns: 320px 1fr; gap: 24px; align-items: start; }
+        .left-col { display: flex; flex-direction: column; gap: 24px; }
+        .right-col { display: flex; flex-direction: column; gap: 24px; }
+
+        /* HEALTH SCORE */
+        .score-card { padding: 28px; }
+        .donut-wrap { position: relative; width: 160px; height: 160px; margin: 0 auto 16px; }
+        .donut-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .score-number { font-family: var(--mono); font-size: 42px; font-weight: 700; line-height: 1; }
+        .score-number.green { color: #00ff88; }
+        .score-number.yellow { color: #FFB800; }
+        .score-number.red { color: #ff4d4d; }
+        .score-total { font-family: var(--mono); font-size: 12px; color: #6b7c93; }
+        .score-desc { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: #6b7c93; text-align: center; }
+
+        /* RISK METER */
+        .risk-meter { padding: 28px; }
+        .risk-meter-top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; }
+        .risk-pct { font-family: var(--mono); font-size: 36px; font-weight: 700; color: #e0e6ed; }
+        .risk-prob-label { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: #6b7c93; margin-bottom: 4px; }
+        .progress-track {
+            width: 100%; height: 8px; background: rgba(255,255,255,0.06);
+            border-radius: 4px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;
+        }
+        .progress-fill { height: 100%; border-radius: 4px; width: 0%; transition: width 1.5s cubic-bezier(0.4,0,0.2,1); }
+        .progress-fill.high { background: linear-gradient(90deg, #ff4d4d, #ff0000); box-shadow: 0 0 10px rgba(255,77,77,0.6); }
+        .progress-fill.medium { background: linear-gradient(90deg, #FFB800, #ff8800); box-shadow: 0 0 10px rgba(255,184,0,0.6); }
+        .progress-fill.low { background: linear-gradient(90deg, #00ff88, #00cc6a); box-shadow: 0 0 10px rgba(0,255,136,0.6); }
+        .progress-labels { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; color: #6b7c93; }
+
+        /* RISK FACTORS */
+        .risk-factors { padding: 28px; }
+        .risk-item {
+            display: flex; align-items: flex-start; gap: 12px;
+            background: rgba(255,77,77,0.06); border: 1px solid rgba(255,77,77,0.2);
+            border-radius: 10px; padding: 12px 14px; margin-bottom: 10px;
+        }
+        .risk-item:last-child { margin-bottom: 0; }
+        .risk-dot { width: 6px; height: 6px; border-radius: 50%; background: #ff4d4d; margin-top: 5px; flex-shrink: 0; box-shadow: 0 0 8px rgba(255,77,77,0.8); }
+        .risk-item-text { font-size: 13px; color: #ffb3b3; line-height: 1.5; }
+        .no-risk { background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.2); border-radius: 10px; padding: 20px; text-align: center; }
+        .no-risk-icon { font-size: 24px; margin-bottom: 8px; }
+        .no-risk-text { font-family: var(--mono); font-size: 12px; letter-spacing: 1px; color: #00ff88; }
+
+        /* PATIENT */
+        .patient-card { padding: 28px; }
+        .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .metric-item {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,184,0,0.12);
+            border-radius: 10px; padding: 14px 12px; transition: all 0.3s;
+        }
+        .metric-item:hover { border-color: rgba(255,184,0,0.25); background: rgba(255,184,0,0.05); }
+        .metric-label { font-family: var(--mono); font-size: 9px; letter-spacing: 2px; color: #6b7c93; margin-bottom: 6px; }
+        .metric-value { font-size: 18px; font-weight: 700; color: #e0e6ed; }
+        .metric-item.bmi { border-color: rgba(46,91,255,0.3); background: rgba(46,91,255,0.06); }
+        .metric-item.bmi .metric-label { color: #7a9cff; }
+        .metric-item.bmi .metric-value { color: #7a9cff; }
+
+        /* CHARTS */
+        .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .chart-card { padding: 24px; }
+        .chart-title { font-family: var(--mono); font-size: 10px; letter-spacing: 2px; color: #6b7c93; margin-bottom: 16px; text-align: center; }
+        .chart-wrap { height: 180px; position: relative; }
+
+        /* RECS */
+        .rec-card { padding: 28px; }
+        .rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .rec-item {
+            display: flex; align-items: center; gap: 12px;
+            background: rgba(46,91,255,0.05); border: 1px solid rgba(46,91,255,0.2);
+            border-radius: 10px; padding: 12px 14px; transition: all 0.3s;
+        }
+        .rec-item:hover { border-color: rgba(46,91,255,0.5); transform: translateX(4px); }
+        .rec-icon {
+            width: 24px; height: 24px;
+            background: linear-gradient(45deg, #2E5BFF, #FFB800);
+            border-radius: 6px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .rec-icon svg { width: 12px; height: 12px; color: white; }
+        .rec-text { font-size: 13px; font-weight: 500; color: #a8bce8; }
+
+        /* FOOTER */
+        footer { border-top: 1px solid rgba(255,184,0,0.25); padding: 32px 24px; text-align: center; position: relative; z-index: 1; }
+        footer p { font-family: var(--mono); font-size: 11px; letter-spacing: 1px; color: #6b7c93; margin-bottom: 4px; }
+
+        /* ANIMATIONS */
+        @keyframes heartbeat {
+            0% { transform: scale(1); } 15% { transform: scale(1.15); }
+            30% { transform: scale(1); } 45% { transform: scale(1.15); } 60% { transform: scale(1); }
+        }
+        @keyframes fadeSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .anim-1 { animation: fadeSlide 0.5s ease both; }
+        .anim-2 { animation: fadeSlide 0.5s 0.1s ease both; }
+        .anim-3 { animation: fadeSlide 0.5s 0.2s ease both; }
+        .anim-4 { animation: fadeSlide 0.5s 0.3s ease both; }
+
+        .panel::after {
+            content: ''; position: absolute; inset: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px);
+            pointer-events: none; border-radius: 16px;
+        }
+
+        @media (max-width: 900px) {
+            .grid-main { grid-template-columns: 1fr; }
+            .metric-grid { grid-template-columns: repeat(2, 1fr); }
+            .charts-grid { grid-template-columns: 1fr; }
+            .rec-grid { grid-template-columns: 1fr; }
+            .result-banner { flex-direction: column; align-items: flex-start; }
+            .confidence-block { border-left: none; border-top: 1px solid rgba(255,184,0,0.25); padding-left: 0; padding-top: 20px; }
+        }
+
+        /* ═══════════════════════════════════════
+           PDF PRINT STYLES — full dark fidelity
+        ═══════════════════════════════════════ */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
+            .no-print { display: none !important; }
+            nav { display: none !important; }
+            body {
+                background: #03050a !important;
+                background-color: #03050a !important;
+                color: #e0e6ed !important;
+            }
+            body::before, body::after { display: none !important; }
+            main { padding: 16px !important; gap: 16px !important; max-width: 100% !important; }
+            .panel {
+                background: #0a0f1e !important;
+                background-color: #0a0f1e !important;
+                border: 1px solid rgba(255,184,0,0.35) !important;
+                box-shadow: none !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .grid-main { grid-template-columns: 260px 1fr !important; gap: 14px !important; }
+            .metric-grid { grid-template-columns: repeat(4,1fr) !important; }
+            .charts-grid { grid-template-columns: 1fr 1fr !important; }
+            .rec-grid { grid-template-columns: 1fr 1fr !important; }
+            .chart-wrap { height: 140px !important; }
+            .donut-wrap { width: 130px !important; height: 130px !important; }
+            .anim-1,.anim-2,.anim-3,.anim-4 { animation: none !important; opacity: 1 !important; transform: none !important; }
+            .confidence-value { -webkit-text-fill-color: #FFB800 !important; color: #FFB800 !important; }
+            footer { margin-top: 12px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="no-print">
+    <div class="nav-inner">
+        <div class="nav-brand" onclick="window.location.href='/'">
+            <div class="nav-logo">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.688 3A5.5 5.5 0 0112 5.052 5.5 5.5 0 0116.313 3c2.973 0 5.437 2.322 5.437 5.25 0 3.925-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z"/>
+                </svg>
+            </div>
+            <span class="nav-title">CARDIO//OS</span>
+        </div>
+        <div class="nav-actions">
+            <button class="btn-ghost" onclick="window.location.href='/form'">START_OVER</button>
+            <button class="btn-primary no-print" id="downloadPdfBtn">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                EXPORT_PDF
+            </button>
+        </div>
+    </div>
+</nav>
+
+<main id="dashboard-content">
+
+    <!-- Banner -->
+    <div class="panel anim-1">
+        <div class="result-banner">
+            <div class="risk-icon {% if risk_level == 'High' %}high{% elif risk_level == 'Medium' %}medium{% else %}low{% endif %}">
+                {% if risk_level == 'High' %}
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                {% elif risk_level == 'Medium' %}
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {% else %}
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                {% endif %}
+            </div>
+            <div class="banner-text">
+                <div class="banner-title">ANALYSIS_COMPLETE // RESULT_OUTPUT</div>
+                <div class="banner-prediction">{{ prediction_text }}</div>
+                <span class="risk-badge {% if risk_level == 'High' %}high{% elif risk_level == 'Medium' %}medium{% else %}low{% endif %}">
+                    {{ risk_level|upper }}_RISK
+                </span>
+            </div>
+            <div class="confidence-block">
+                <div class="confidence-label">MODEL_CONFIDENCE</div>
+                <div>
+                    <span class="confidence-value">{{ confidence_pct }}</span>
+                    <span class="confidence-unit">%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Grid -->
+    <div class="grid-main">
+        <div class="left-col">
+
+            <!-- Health Score -->
+            <div class="panel score-card anim-2">
+                <div class="section-label">HEALTH_SCORE</div>
+                <div class="donut-wrap">
+                    <canvas id="healthScoreChart"></canvas>
+                    <div class="donut-center">
+                        <span class="score-number {% if health_score >= 80 %}green{% elif health_score >= 50 %}yellow{% else %}red{% endif %}">{{ health_score }}</span>
+                        <span class="score-total">/ 100</span>
+                    </div>
+                </div>
+                <div class="score-desc">
+                    {% if health_score >= 80 %}EXCELLENT_METRICS{% elif health_score >= 50 %}MODERATE // IMPROVEMENT_POSSIBLE{% else %}CRITICAL // FOCUS_REQUIRED{% endif %}
+                </div>
+            </div>
+
+            <!-- Risk Meter -->
+            <div class="panel risk-meter anim-3">
+                <div class="section-label">RISK_PROBABILITY</div>
+                <div class="risk-meter-top">
+                    <span class="risk-pct">{{ risk_prob_pct }}%</span>
+                    <span class="risk-prob-label">PROBABILITY</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill {% if risk_level == 'High' %}high{% elif risk_level == 'Medium' %}medium{% else %}low{% endif %}" id="riskProgressBar"></div>
+                </div>
+                <div class="progress-labels">
+                    <span>LOW [0%]</span><span>HIGH [100%]</span>
+                </div>
+            </div>
+
+            <!-- Risk Factors -->
+            <div class="panel risk-factors anim-4">
+                <div class="section-label">DETECTED_RISKS</div>
+                {% if detected_risks|length > 0 %}
+                    {% for risk in detected_risks %}
+                    <div class="risk-item">
+                        <div class="risk-dot"></div>
+                        <span class="risk-item-text">{{ risk }}</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-risk">
+                        <div class="no-risk-icon">✓</div>
+                        <div class="no-risk-text">NO_RISK_FACTORS_DETECTED</div>
+                    </div>
+                {% endif %}
+            </div>
+
+        </div>
+        <div class="right-col">
+
+            <!-- Patient Profile -->
+            <div class="panel patient-card anim-2">
+                <div class="section-label">PATIENT_PROFILE // INPUT_DATA</div>
+                <div class="metric-grid">
+                    {% for key, value in patient_data.items() %}
+                    <div class="metric-item">
+                        <div class="metric-label">{{ key|upper }}</div>
+                        <div class="metric-value">{{ value }}</div>
+                    </div>
+                    {% endfor %}
+                    <div class="metric-item bmi">
+                        <div class="metric-label">BMI</div>
+                        <div class="metric-value">{{ bmi }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid anim-3">
+                <div class="panel chart-card">
+                    <div class="chart-title">BLOOD_PRESSURE // ANALYSIS</div>
+                    <div class="chart-wrap"><canvas id="bpChart"></canvas></div>
+                </div>
+                <div class="panel chart-card">
+                    <div class="chart-title">CHOLESTEROL // FACTOR_LEVEL</div>
+                    <div class="chart-wrap"><canvas id="cholesterolChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Recommendations -->
+            <div class="panel panel-blue rec-card anim-4">
+                <div class="section-label" style="color:#7a9cff;">ACTIONABLE_RECOMMENDATIONS</div>
+                <div class="rec-grid">
+                    {% for rec in recommendations %}
+                    <div class="rec-item">
+                        <div class="rec-icon">
+                            <svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <span class="rec-text">{{ rec }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    <p>© 2024 CARDIO//OS — AI RISK ANALYSIS SYSTEM</p>
+    <p>DISCLAIMER // AI PREDICTION ONLY — NOT A SUBSTITUTE FOR PROFESSIONAL MEDICAL ADVICE</p>
+</footer>
+
+<script>
+    // ── Progress Bar ──
+    setTimeout(() => {
+        document.getElementById('riskProgressBar').style.width = '{{ risk_prob_pct }}%';
+    }, 400);
+
+    // ── Chart Defaults ──
+    Chart.defaults.font.family = "'Share Tech Mono', monospace";
+    Chart.defaults.color = '#6b7c93';
+    Chart.defaults.scale.grid.color = 'rgba(255,184,0,0.06)';
+    Chart.defaults.scale.border = { color: 'rgba(255,184,0,0.1)' };
+
+    // ── Store chart instances for PDF re-render ──
+    let healthChart, bpChartInst, cholChartInst;
+
+    // ── Health Score Doughnut ──
+    const scoreCtx = document.getElementById('healthScoreChart').getContext('2d');
+    const score = {{ health_score }};
+    let scoreColor = '#00ff88';
+    if(score < 50) scoreColor = '#ff4d4d';
+    else if(score < 80) scoreColor = '#FFB800';
+
+    healthChart = new Chart(scoreCtx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [score, 100 - score],
+                backgroundColor: [scoreColor, 'rgba(255,255,255,0.06)'],
+                borderWidth: 0, borderRadius: 20, cutout: '82%'
+            }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 800 },
+            plugins: { tooltip: { enabled: false }, legend: { display: false } }
+        }
+    });
+
+    // ── BP Chart ──
+    const bpCtx = document.getElementById('bpChart').getContext('2d');
+    bpChartInst = new Chart(bpCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Systolic', 'Diastolic'],
+            datasets: [
+                { label: 'YOUR BP', data: [{{ patient_data['Systolic BP'] }}, {{ patient_data['Diastolic BP'] }}], backgroundColor: 'rgba(255,184,0,0.75)', borderColor: '#FFB800', borderWidth: 1, borderRadius: 6 },
+                { label: 'NORMAL',  data: [120, 80], backgroundColor: 'rgba(46,91,255,0.35)', borderColor: '#2E5BFF', borderWidth: 1, borderRadius: 6 }
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 800 },
+            scales: {
+                x: { ticks: { font: { size: 10 } } },
+                y: { beginAtZero: true, suggestedMax: 200, ticks: { font: { size: 10 } } }
+            },
+            plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, boxWidth: 6, font: { size: 10 } } } }
+        }
+    });
+
+    // ── Cholesterol Chart ──
+    const cholCtx = document.getElementById('cholesterolChart').getContext('2d');
+    const userChol = {{ patient_data['Cholesterol'] }};
+    const cholColor = userChol === 1 ? '#00ff88' : (userChol === 2 ? '#FFB800' : '#ff4d4d');
+
+    cholChartInst = new Chart(cholCtx, {
+        type: 'bar',
+        data: {
+            labels: ['CHOLESTEROL'],
+            datasets: [{ label: 'LEVEL (1-3)', data: [userChol], backgroundColor: cholColor + 'bb', borderColor: cholColor, borderWidth: 1, borderRadius: 6, barThickness: 50 }]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            animation: { duration: 800 },
+            indexAxis: 'y',
+            scales: {
+                x: { min: 0, max: 3, ticks: { stepSize: 1, font: { size: 10 } } },
+                y: { ticks: { font: { size: 10 } } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: ctx => ctx.raw === 1 ? 'NORMAL' : ctx.raw === 2 ? 'ABOVE_NORMAL' : 'WELL_ABOVE_NORMAL' } }
+            }
+        }
+    });
+
+    // ════════════════════════════════════════════════
+    //  PDF EXPORT — Fixed for dark theme
+    //  Strategy: render charts to static images first,
+    //  then build a self-contained dark HTML clone,
+    //  render that to PDF with solid background.
+    // ════════════════════════════════════════════════
+    document.getElementById('downloadPdfBtn').addEventListener('click', async function () {
+        const btn = this;
+        const orig = btn.innerHTML;
+        btn.innerHTML = '⟳ GENERATING...';
+        btn.disabled = true;
+
+        try {
+            // 1. Wait for chart animations to complete
+            await new Promise(r => setTimeout(r, 1000));
+
+            // 2. Capture charts as base64 images (before cloning)
+            const healthImg  = document.getElementById('healthScoreChart').toDataURL('image/png');
+            const bpImg      = document.getElementById('bpChart').toDataURL('image/png');
+            const cholImg    = document.getElementById('cholesterolChart').toDataURL('image/png');
+            const progressPct = '{{ risk_prob_pct }}';
+
+            // 3. Get all current CSS text from stylesheets in page
+            let allCSS = '';
+            for (const sheet of document.styleSheets) {
+                try {
+                    for (const rule of sheet.cssRules) { allCSS += rule.cssText + '\n'; }
+                } catch(e) {}
+            }
+
+            // 4. Clone the dashboard element
+            const clone = document.getElementById('dashboard-content').cloneNode(true);
+
+            // 5. Fix animations — make all visible immediately
+            clone.querySelectorAll('.anim-1,.anim-2,.anim-3,.anim-4').forEach(el => {
+                el.style.cssText += 'animation:none!important;opacity:1!important;transform:none!important;';
+            });
+
+            // 6. Replace canvas elements with img tags (static chart images)
+            const canvasMap = {
+                'healthScoreChart': healthImg,
+                'bpChart': bpImg,
+                'cholesterolChart': cholImg
+            };
+            clone.querySelectorAll('canvas').forEach(canvas => {
+                const src = canvasMap[canvas.id];
+                if (src) {
+                    const img = document.createElement('img');
+                    img.src = src;
+                    img.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
+                    canvas.parentNode.replaceChild(img, canvas);
+                }
+            });
+
+            // 7. Set progress bar to actual width
+            const bar = clone.querySelector('#riskProgressBar');
+            if (bar) bar.style.width = progressPct + '%';
+
+            // 8. Remove donut-center overlay issue — fix z-index for static image
+            clone.querySelectorAll('.donut-wrap').forEach(wrap => {
+                wrap.style.cssText += 'position:relative;';
+            });
+            clone.querySelectorAll('.donut-center').forEach(dc => {
+                dc.style.cssText += 'position:absolute;z-index:2;';
+            });
+
+            // 9. Build a complete standalone HTML document with inlined dark styles
+            const pdfHTML = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+html,body{background:#03050a!important;background-color:#03050a!important;color:#e0e6ed;font-family:'Space Grotesk',sans-serif;width:100%;}
+${allCSS}
+/* PDF overrides */
+body::before,body::after{display:none!important;}
+.panel{background:#0a0f1e!important;background-color:#0a0f1e!important;}
+.panel-blue{background:#08101f!important;background-color:#08101f!important;}
+.metric-item{background:#111827!important;background-color:#111827!important;}
+.metric-item.bmi{background:#0d1535!important;background-color:#0d1535!important;}
+.risk-item{background:#1a0a0a!important;background-color:#1a0a0a!important;}
+.rec-item{background:#080e1e!important;background-color:#080e1e!important;}
+.no-risk{background:#051a10!important;background-color:#051a10!important;}
+.confidence-value{-webkit-text-fill-color:#FFB800!important;color:#FFB800!important;background:none!important;}
+main{max-width:100%!important;padding:20px!important;}
+.grid-main{grid-template-columns:280px 1fr!important;gap:16px!important;}
+.chart-wrap img{width:100%!important;height:140px!important;object-fit:contain;}
+.donut-wrap img{width:160px!important;height:160px!important;}
+</style>
+</head>
+<body style="background:#03050a;">
+<div style="background:#03050a;min-height:100%;padding:0;">
+${clone.outerHTML}
+</div>
+</body>
+</html>`;
+
+            // 10. Create a temporary hidden iframe to render the HTML
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1200px;height:1px;border:none;';
+            document.body.appendChild(iframe);
+
+            iframe.contentDocument.open();
+            iframe.contentDocument.write(pdfHTML);
+            iframe.contentDocument.close();
+
+            // 11. Wait for iframe to fully load (fonts, etc.)
+            await new Promise(resolve => {
+                iframe.onload = resolve;
+                setTimeout(resolve, 2500); // fallback
+            });
+
+            const iframeBody = iframe.contentDocument.body;
+            const iframeMain = iframe.contentDocument.getElementById('dashboard-content');
+
+            // 12. Generate PDF from the iframe content
+            await html2pdf().set({
+                margin: [6, 6, 6, 6],
+                filename: 'CardioOS_Heart_Report.pdf',
+                image: { type: 'jpeg', quality: 0.99 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    backgroundColor: '#03050a',
+                    logging: false,
+                    width: 1200,
+                    windowWidth: 1200,
+                },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true },
+                pagebreak: { mode: ['avoid-all', 'css'], avoid: ['.panel', '.charts-grid', '.metric-grid', '.rec-grid'] }
+            }).from(iframeMain || iframeBody).save();
+
+            // 13. Cleanup
+            document.body.removeChild(iframe);
+
+        } catch (err) {
+            console.error('PDF Error:', err);
+            alert('PDF generation failed. Use browser Print (Ctrl+P) → Save as PDF as a fallback.');
+        }
+
+        btn.innerHTML = orig;
+        btn.disabled = false;
+    });
+</script>
+</body>
+</html>
